@@ -56,21 +56,29 @@ export default function FuelFinder({ initial, cities, fetchError }: Props) {
   const set = <K extends keyof Filters>(key: K, value: Filters[K]) =>
     setFilters((f) => ({ ...f, [key]: value }));
 
-  const results = useMemo(() => {
+  const { availableStations, results } = useMemo(() => {
     const q = filters.q.toLowerCase().trim();
-    return stations
-      .map((s) => ({ s, o: overall(s, filters.fuel) }))
-      .filter(({ s, o }) => {
-        if (filters.city !== ALL_LOCATIONS && s.city !== filters.city) return false;
-        if (q && !`${s.name} ${s.area} ${s.brand}`.toLowerCase().includes(q)) return false;
-        if (filters.status !== "All" && statusWord[o] !== filters.status) return false;
-        return true;
-      })
-      .sort(
-        (a, b) =>
-          rank[a.o] - rank[b.o] ||
-          new Date(b.s.updated_at).getTime() - new Date(a.s.updated_at).getTime(),
-      );
+    const matchesLocationAndSearch = (s: Station) => {
+      if (filters.city !== ALL_LOCATIONS && s.city !== filters.city) return false;
+      if (q && !`${s.name} ${s.area} ${s.brand}`.toLowerCase().includes(q)) return false;
+      return true;
+    };
+    const sortStations = (
+      a: { s: Station; o: ReturnType<typeof overall> },
+      b: { s: Station; o: ReturnType<typeof overall> },
+    ) =>
+      rank[a.o] - rank[b.o] ||
+      new Date(b.s.updated_at).getTime() - new Date(a.s.updated_at).getTime();
+    const mapped = stations
+      .filter(matchesLocationAndSearch)
+      .map((s) => ({ s, o: overall(s, filters.fuel) }));
+    const availableStations = mapped
+      .filter(({ o }) => statusWord[o] === "Has fuel")
+      .sort(sortStations);
+    const results = mapped
+      .filter(({ o }) => filters.status === "All" || statusWord[o] === filters.status)
+      .sort(sortStations);
+    return { availableStations, results };
   }, [filters, stations]);
 
   const closeSheet = useCallback(() => setSelectedId(null), []);
@@ -155,18 +163,38 @@ export default function FuelFinder({ initial, cities, fetchError }: Props) {
             </button>
           </div>
         ) : (
-          <div className="grid gap-2.5">
-            {results.length ? (
-              results.map(({ s, o }) => (
-                <StationCard key={s.id} station={s} overall={o} onOpen={setSelectedId} />
-              ))
-            ) : (
-              <div className="rounded-xl border border-dashed border-line bg-surface p-7 text-center text-muted">
-                <b>No stations match</b>
-                <br />
-                Try another location or clear a filter.
-              </div>
+          <div className="grid gap-5">
+            {availableStations.length > 0 && (
+              <section aria-labelledby="available-heading" className="grid gap-2.5">
+                <div className="flex items-baseline justify-between gap-3">
+                  <h2 id="available-heading" className="text-lg font-bold">
+                    Fuel available
+                  </h2>
+                  <span className="text-sm text-muted">
+                    {availableStations.length} {availableStations.length === 1 ? "station" : "stations"}
+                  </span>
+                </div>
+                {availableStations.map(({ s, o }) => (
+                  <StationCard key={s.id} station={s} overall={o} onOpen={setSelectedId} />
+                ))}
+              </section>
             )}
+            <section aria-labelledby="stations-heading" className="grid gap-2.5">
+              <h2 id="stations-heading" className="text-lg font-bold">
+                All stations
+              </h2>
+              {results.length ? (
+                results.map(({ s, o }) => (
+                  <StationCard key={s.id} station={s} overall={o} onOpen={setSelectedId} />
+                ))
+              ) : (
+                <div className="rounded-xl border border-dashed border-line bg-surface p-7 text-center text-muted">
+                  <b>{availableStations.length ? "No other stations match" : "No stations match"}</b>
+                  <br />
+                  Try another location or clear a filter.
+                </div>
+              )}
+            </section>
           </div>
         )}
       </main>

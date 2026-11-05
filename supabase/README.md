@@ -23,7 +23,13 @@ Run these SQL files **in order** in the Supabase SQL editor
 
    This is the only way to create a super-admin. No code path can do it.
 
-2. Fill in `.env.local` with your project's URL, anon key, and service-role key.
+2. Copy `.env.example` to `.env.local` and fill in the values from **Project Settings â†’ API**:
+   - `NEXT_PUBLIC_SUPABASE_URL`: the project URL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: the public anon/publishable key used by the UI and auth
+   - `SUPABASE_SERVICE_ROLE_KEY`: the secret service-role key, used only by trusted server routes
+   - `NEXT_PUBLIC_SITE_URL`: the site origin used for invite links (for local development, `http://localhost:3000`)
+
+   Never put the service-role key in a `NEXT_PUBLIC_` variable or commit it. The public page and browser auth need the anon/publishable key; the service-role key cannot replace it.
 
 3. In the Supabase Dashboard:
    - **Auth → Providers → Email** → disable "Allow new users to sign up"
