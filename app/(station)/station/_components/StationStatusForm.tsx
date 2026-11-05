@@ -12,16 +12,7 @@ interface StationData {
   area: string;
   petrol_status: string;
   diesel_status: string;
-  petrol_eta: string | null;
-  diesel_eta: string | null;
   updated_at: string;
-}
-
-/** Convert a datetime-local string (in Africa/Blantyre local time) to an ISO UTC string */
-function blantyreDatetimeToISO(localDatetime: string): string {
-  // datetime-local gives "YYYY-MM-DDTHH:mm". We treat it as Blantyre time (UTC+2).
-  // The safest cross-browser approach: append the offset.
-  return new Date(`${localDatetime}+02:00`).toISOString();
 }
 
 export default function StationStatusForm({ station }: { station: StationData }) {
@@ -34,17 +25,6 @@ export default function StationStatusForm({ station }: { station: StationData })
   const [dieselStatus, setDieselStatus] = useState<"has_fuel" | "no_fuel">(
     station.diesel_status as "has_fuel" | "no_fuel",
   );
-  const [petrolEta, setPetrolEta] = useState(
-    station.petrol_eta
-      ? new Date(station.petrol_eta).toISOString().slice(0, 16)
-      : "",
-  );
-  const [dieselEta, setDieselEta] = useState(
-    station.diesel_eta
-      ? new Date(station.diesel_eta).toISOString().slice(0, 16)
-      : "",
-  );
-
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
 
   function showToast(msg: string, ok: boolean) {
@@ -58,8 +38,6 @@ export default function StationStatusForm({ station }: { station: StationData })
       station_id: station.id,
       petrol_status: petrolStatus,
       diesel_status: dieselStatus,
-      petrol_eta: petrolStatus === "no_fuel" && petrolEta ? blantyreDatetimeToISO(petrolEta) : null,
-      diesel_eta: dieselStatus === "no_fuel" && dieselEta ? blantyreDatetimeToISO(dieselEta) : null,
     };
     startTransition(async () => {
       const result = await updateStationStatus(payload);
@@ -94,7 +72,7 @@ export default function StationStatusForm({ station }: { station: StationData })
             <button
               type="button"
               className={toggleClass(petrolStatus === "has_fuel")}
-              onClick={() => { setPetrolStatus("has_fuel"); setPetrolEta(""); }}
+              onClick={() => setPetrolStatus("has_fuel")}
             >
               Has fuel
             </button>
@@ -106,18 +84,6 @@ export default function StationStatusForm({ station }: { station: StationData })
               No fuel
             </button>
           </div>
-          {petrolStatus === "no_fuel" && (
-            <label className="mt-3 grid gap-1 text-sm">
-              ETA (optional – Malawi time)
-              <input
-                type="datetime-local"
-                value={petrolEta}
-                onChange={(e) => setPetrolEta(e.target.value)}
-                min={new Date().toISOString().slice(0, 16)}
-                className="min-h-[44px] rounded-[10px] border border-line bg-bg px-3 py-2 text-ink"
-              />
-            </label>
-          )}
         </fieldset>
 
         {/* Diesel */}
@@ -127,7 +93,7 @@ export default function StationStatusForm({ station }: { station: StationData })
             <button
               type="button"
               className={toggleClass(dieselStatus === "has_fuel")}
-              onClick={() => { setDieselStatus("has_fuel"); setDieselEta(""); }}
+              onClick={() => setDieselStatus("has_fuel")}
             >
               Has fuel
             </button>
@@ -139,18 +105,6 @@ export default function StationStatusForm({ station }: { station: StationData })
               No fuel
             </button>
           </div>
-          {dieselStatus === "no_fuel" && (
-            <label className="mt-3 grid gap-1 text-sm">
-              ETA (optional – Malawi time)
-              <input
-                type="datetime-local"
-                value={dieselEta}
-                onChange={(e) => setDieselEta(e.target.value)}
-                min={new Date().toISOString().slice(0, 16)}
-                className="min-h-[44px] rounded-[10px] border border-line bg-bg px-3 py-2 text-ink"
-              />
-            </label>
-          )}
         </fieldset>
 
         <button

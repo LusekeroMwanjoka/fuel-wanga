@@ -14,6 +14,52 @@ const STATUS_OPTIONS: readonly StatusFilter[] = ["All", "Has fuel", "No fuel"];
 const fieldClass =
   "mt-1 min-h-[44px] w-full rounded-[10px] border border-line bg-bg px-3 py-2.5 text-ink";
 
+function normalizeSearch(value: string): string {
+  return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+}
+
+function oneEditAway(a: string, b: string): boolean {
+  if (Math.abs(a.length - b.length) > 1 || Math.min(a.length, b.length) < 4) return false;
+  let i = 0;
+  let j = 0;
+  let edits = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) {
+      i++;
+      j++;
+      continue;
+    }
+    if (++edits > 1) return false;
+    if (a.length > b.length) i++;
+    else if (b.length > a.length) j++;
+    else {
+      i++;
+      j++;
+    }
+  }
+  return edits + (i < a.length || j < b.length ? 1 : 0) <= 1;
+}
+
+function fuzzyMatch(query: string, values: string[]): boolean {
+  const normalizedQuery = normalizeSearch(query);
+  if (!normalizedQuery) return true;
+  const normalizedValues = values.map(normalizeSearch).filter(Boolean);
+  if (normalizedValues.some((value) => value.includes(normalizedQuery))) return true;
+
+  const queryWords = query.toLowerCase().match(/[a-z0-9]+/g) ?? [];
+  const valueWords = values.flatMap((value) => value.toLowerCase().match(/[a-z0-9]+/g) ?? []);
+  if (queryWords.some((word) => valueWords.some((candidate) => candidate.includes(word)))) return true;
+  if (queryWords.some((word) => word.length >= 4 && valueWords.some((candidate) => oneEditAway(word, candidate)))) return true;
+
+  // If "area" has a typo or is joined to its number, compare its numeric part separately.
+  const queryArea = query.toLowerCase().match(/(?:area|aera|ar ea|are)[^0-9]*([0-9]+)/)?.[1];
+  if (queryArea && values.some((value) => normalizeSearch(value).includes(queryArea))) return true;
+
+  // Match concatenated words too, so "area49" can find "Area 49".
+  const joinedValues = normalizedValues.join("");
+  return joinedValues.includes(normalizedQuery);
+}
+
 /** Map a DB row to a UI Station, computing the Status enum values. */
 function rowToStation(row: StationRow): Station {
   return {
@@ -60,7 +106,7 @@ export default function FuelFinder({ initial, cities, fetchError }: Props) {
     const q = filters.q.toLowerCase().trim();
     const matchesLocationAndSearch = (s: Station) => {
       if (filters.city !== ALL_LOCATIONS && s.city !== filters.city) return false;
-      if (q && !`${s.name} ${s.area} ${s.brand}`.toLowerCase().includes(q)) return false;
+      if (q && !fuzzyMatch(q, [s.name, s.area, s.brand, s.city])) return false;
       return true;
     };
     const sortStations = (

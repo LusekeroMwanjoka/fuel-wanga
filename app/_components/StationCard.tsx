@@ -1,7 +1,7 @@
 "use client";
 
 import type { Station, Status } from "@/lib/types";
-import { cardBorder } from "@/lib/fuel";
+import { ago, cardBorder } from "@/lib/fuel";
 import StatusPill from "./StatusPill";
 
 export default function StationCard({
@@ -23,6 +23,9 @@ export default function StationCard({
         <div className="text-[1.05rem] font-semibold">{s.name}</div>
         <div className="text-[.9rem] text-muted">
           {s.area}, {s.city}
+        </div>
+        <div className="mt-1 text-xs text-muted">
+          Updated {ago(s.updated_at)}
         </div>
       </div>
       <StatusPill status={overall} />

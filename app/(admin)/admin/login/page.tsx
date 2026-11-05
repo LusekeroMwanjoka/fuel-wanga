@@ -12,6 +12,7 @@ function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(
     reason === "not-admin" ? "Your account does not have admin access." : null,
   );
@@ -47,15 +48,26 @@ function LoginForm() {
           />
         </label>
         <label className="grid gap-1">
-          Password
+          <span>Password</span>
+          <span className="relative">
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             required
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="min-h-[44px] rounded-[10px] border border-line bg-bg px-3 py-2 text-ink"
+            className="min-h-[44px] w-full rounded-[10px] border border-line bg-bg px-3 py-2 pr-20 text-ink"
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword((visible) => !visible)}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-pressed={showPassword}
+            className="absolute inset-y-0 right-2 min-w-16 text-sm font-semibold text-muted underline"
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
+          </span>
         </label>
         {error && <p className="text-out text-sm">{error}</p>}
         <button
