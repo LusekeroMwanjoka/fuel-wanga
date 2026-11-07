@@ -10,8 +10,13 @@ const bricolage = Bricolage_Grotesque({
 });
 
 export const metadata: Metadata = {
-  title: "Fuel Finder Malawi",
+  title: "Fuel Wanga",
   description: "Check which stations have petrol or diesel before you drive.",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export const viewport: Viewport = {

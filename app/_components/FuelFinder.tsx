@@ -132,6 +132,33 @@ export default function FuelFinder({ initial, cities, fetchError }: Props) {
 
   return (
     <>
+      {/* ── Site header ───────────────────────────────────────────── */}
+      <header className="sticky top-0 z-10 border-b border-line bg-surface/90 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-[860px] items-center gap-2.5 px-4 py-3">
+          {/* Fuel pump icon */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-6 w-6 shrink-0 text-ok"
+            aria-hidden="true"
+          >
+            <path d="M3 22V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16" />
+            <path d="M3 10h10" />
+            <path d="M13 6h2a2 2 0 0 1 2 2v3a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L19 7" />
+            <path d="M19 22V13" />
+            <line x1="3" y1="22" x2="21" y2="22" />
+          </svg>
+          <span className="text-lg font-extrabold tracking-tight text-ink">
+            Fuel Wanga
+          </span>
+        </div>
+      </header>
+
       <main className="mx-auto max-w-[860px] px-4 pt-5 pb-16">
         {/* Malawi flag bar */}
         <div className="flex h-1.5 w-24 overflow-hidden rounded-[3px]" aria-hidden="true">
